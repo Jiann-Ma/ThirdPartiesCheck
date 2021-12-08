@@ -20,7 +20,7 @@ import time, os
 def checkScreenshot(driver, row):
     row = 0
     row = row + 1
-    print(f"[INFO] 開始檢查第 {row} 列的representatives")
+    print(f"[INFO] 開始檢查第 {row} 列的companies")
     picture_time = time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime(time.time()))
     directory_time = time.strftime("%Y-%m-%d", time.localtime(time.time()))
     print(picture_time)
@@ -61,24 +61,21 @@ def main(input_path):
     input_path: str, 輸入資料源的路徑 ( 含副檔名 )
     """
     # Reference: https://blog.impochun.com/excel-big5-utf8-issue/
-    df_input = pd.read_csv('representatives.csv', encoding= 'utf-8-sig',
-                             converters={'representatives':str})
+    df_input = pd.read_csv('companies.csv', encoding= 'utf-8-sig',
+                             converters={'companies':str})
     print(f'[INFO] 已成功讀取資料，筆數: {len(df_input)}，內容如以下：')
-    print(df_input['representatives']) 
+    print(df_input['companies']) 
     
 
     driver = set_environment_chrome()     
 
     # 寫入所需資料
     for row in df_input.index:
-        i = 0
-        i = i + 1
+        i = 1
         URL = 'https://law.judicial.gov.tw/FJUD/default.aspx'
         driver.get(URL)
         time.sleep(2)
-        forVerify = df_input.loc[row, 'representatives']
-        
-        print(f'[INFO] 現在做第{i}筆')
+        forVerify = df_input.loc[row, 'companies']
         
         # 輸入要檢查的項目
         needsCheck = WebDriverWait(driver, 2).until(
@@ -95,15 +92,15 @@ def main(input_path):
         time.sleep(2)
         #點下「判決書查詢」，回到查詢頁面
         driver.find_element(By.XPATH, '//a[@href="/FJUD/default.aspx"]').click()
-        #清除輸入的字
-        # name_field = driver.find_element_by_id("txtKW")
-        # name_field.clear()
-        
+        #清除輸入的字(cookies)
         driver.delete_all_cookies()
+
+        print(f'[INFO] 現在做完第{i}筆')
+        i = i + 1
 
     print(f"[INFO] 總共{len(df_input)}筆，全部完成了！")
     driver.close()
 
 if __name__ == '__main__':
-    input_path = 'representatives.csv'
+    input_path = 'companies.csv'
     main(input_path)
