@@ -102,7 +102,7 @@ def main(input_path):
         driver.delete_all_cookies()
 
     print(f"[INFO] 總共{len(df_input)}筆，全部完成了！")
-        
+    driver.close()
 
 if __name__ == '__main__':
     input_path = 'representatives.csv'
