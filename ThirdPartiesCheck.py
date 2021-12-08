@@ -17,10 +17,7 @@ import time, os
 
 
 #Reference: https://www.cnblogs.com/hong-fithing/p/9656221.html
-def checkScreenshot(driver, row):
-    row = 0
-    row = row + 1
-    print(f"[INFO] 開始檢查第 {row} 列的companies")
+def checkScreenshot(driver, i):
     picture_time = time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime(time.time()))
     directory_time = time.strftime("%Y-%m-%d", time.localtime(time.time()))
     print(picture_time)
@@ -32,15 +29,15 @@ def checkScreenshot(driver, row):
         File_Path = os.getcwd() + '\\' + directory_time + '\\'
         if not os.path.exists(File_Path):
             os.makedirs(File_Path)
-            print("[INFO] 目錄新建成功：%s" % File_Path)
+            print('[INFO] 目錄新建成功：%s' % File_Path)
         else:
-            print("[INFO] 目錄已存在！")
+            print('[INFO] 目錄已存在！')
     except BaseException as msg:
-        print("[INFO] 目錄新建失敗：%s" % msg)
+        print('[INFO] 目錄新建失敗：%s' % msg)
     
     try:
-        picture = driver.save_screenshot('.\\' + directory_time + '\\' + picture_time + '.png')
-        print("%s：[INFO] 拍完該筆的照片了！" % picture)
+        driver.save_screenshot('.\\' + directory_time + '\\' + picture_time + '.png')
+        print(f'[INFO] 拍完第{i}筆的照片了！')
     except BaseException as msg:
         print(msg)
     time.sleep(2)
@@ -70,8 +67,9 @@ def main(input_path):
     driver = set_environment_chrome()     
 
     # 寫入所需資料
+    i = 1
     for row in df_input.index:
-        i = 1
+        
         URL = 'https://law.judicial.gov.tw/FJUD/default.aspx'
         driver.get(URL)
         time.sleep(2)
@@ -88,7 +86,8 @@ def main(input_path):
         driver.find_element(By.XPATH, '//*[@id="btnSimpleQry"]').click()
         time.sleep(2)
         #截圖
-        checkScreenshot(driver, row)
+        # print(f'[INFO] 現在拍第{i}筆的照片！')
+        checkScreenshot(driver, i)
         time.sleep(2)
         #點下「判決書查詢」，回到查詢頁面
         driver.find_element(By.XPATH, '//a[@href="/FJUD/default.aspx"]').click()
