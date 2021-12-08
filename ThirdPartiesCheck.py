@@ -67,8 +67,8 @@ def main(input_path):
     print(df_input['representatives']) 
     
 
-    driver_chrome = set_environment_chrome()     
-    driver = driver_chrome
+    driver = set_environment_chrome()     
+
     # 寫入所需資料
     for row in df_input.index:
         i = 0
@@ -96,7 +96,10 @@ def main(input_path):
         #點下「判決書查詢」，回到查詢頁面
         driver.find_element(By.XPATH, '//a[@href="/FJUD/default.aspx"]').click()
         #清除輸入的字
-        driver.find_element(By.ID, 'txtKW').clear()
+        # name_field = driver.find_element_by_id("txtKW")
+        # name_field.clear()
+        
+        driver.delete_all_cookies()
 
     print(f"[INFO] 總共{len(df_input)}筆，全部完成了！")
         
