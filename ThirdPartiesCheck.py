@@ -10,24 +10,41 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.common.keys import Keys
 
 import pandas as pd
-import time, random
-
-import time
-import os
+import time, os
 
 
-    
+#Reference: https://www.cnblogs.com/hong-fithing/p/9656221.html
 def checkScreenshot(driver, row):
+    row = 0
+    row = row + 1
     print(f"[INFO] 開始檢查第 {row} 列的representatives")
     picture_time = time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime(time.time()))
+    directory_time = time.strftime("%Y-%m-%d", time.localtime(time.time()))
     print(picture_time)
+    print(directory_time)
+    
+    #獲取當前目錄
+    print(os.getcwd())
     try:
-        picture_url=driver.get_screenshot_as_file('Y:\\治理規劃部\\MJT\\RPA\\ThirdPartiesCheck\\ThirdPartiesScreenshot'+ picture_time +'.png')
-        print("%s：[INFO] 拍完該筆的照片了！" % picture_url)
+        File_Path = os.getcwd() + '\\' + directory_time + '\\'
+        if not os.path.exists(File_Path):
+            os.makedirs(File_Path)
+            print("[INFO] 目錄新建成功：%s" % File_Path)
+        else:
+            print("[INFO] 目錄已存在！")
     except BaseException as msg:
-        print(msg)  
+        print("[INFO] 目錄新建失敗：%s" % msg)
+    
+    try:
+        picture = driver.save_screenshot('.\\' + directory_time + '\\' + picture_time + '.png')
+        print("%s：[INFO] 拍完該筆的照片了！" % picture)
+    except BaseException as msg:
+        print(msg)
+    time.sleep(2)
+    
 
 def set_environment_chrome():
     chrome_options = webdriver.ChromeOptions()
@@ -37,27 +54,13 @@ def set_environment_chrome():
     driver_chrome = webdriver.Chrome(executable_path=r'C:\chromedriver.exe',options=chrome_options)
     return driver_chrome
 
-def action(driver, row, forVerify):        
-    # 輸入要檢查的項目
-    needsCheck = WebDriverWait(driver, random.randint(2, 4)).until(
-        EC.visibility_of_element_located((By.ID, 'txtKW')))
-    
-    needsCheck.send_keys(forVerify)
-    
-    time.sleep(random.randint(2, 4))
-    
-    driver.find_element(By.XPATH, '//*[@id="btnSimpleQry"]').click()
-    time.sleep(2)
-    checkScreenshot(driver, row)
-    driver.refresh()
-    driver.find_element(By.ID, 'txtKW').clear()
         
 def main(input_path):
     """
     至 https://law.judicial.gov.tw/FJUD/default.aspx 執行檢索
     input_path: str, 輸入資料源的路徑 ( 含副檔名 )
     """
-    # 讀取資料輸入源
+    # Reference: https://blog.impochun.com/excel-big5-utf8-issue/
     df_input = pd.read_csv('representatives.csv', encoding= 'utf-8-sig',
                              converters={'representatives':str})
     print(f'[INFO] 已成功讀取資料，筆數: {len(df_input)}，內容如以下：')
@@ -68,13 +71,33 @@ def main(input_path):
     driver = driver_chrome
     # 寫入所需資料
     for row in df_input.index:
+        i = 0
+        i = i + 1
         URL = 'https://law.judicial.gov.tw/FJUD/default.aspx'
         driver.get(URL)
-        time.sleep(random.randint(2, 4))
+        time.sleep(2)
         forVerify = df_input.loc[row, 'representatives']
-        print(f'[INFO] 現在做第{row}筆')
-        action(driver, row, forVerify)
         
+        print(f'[INFO] 現在做第{i}筆')
+        
+        # 輸入要檢查的項目
+        needsCheck = WebDriverWait(driver, 2).until(
+            EC.visibility_of_element_located((By.ID, 'txtKW')))
+    
+        needsCheck.send_keys(forVerify)
+    
+        time.sleep(2)
+        #按下送出查詢
+        driver.find_element(By.XPATH, '//*[@id="btnSimpleQry"]').click()
+        time.sleep(2)
+        #截圖
+        checkScreenshot(driver, row)
+        time.sleep(2)
+        #點下「判決書查詢」，回到查詢頁面
+        driver.find_element(By.XPATH, '//a[@href="/FJUD/default.aspx"]').click()
+        #清除輸入的字
+        driver.find_element(By.ID, 'txtKW').clear()
+
     print(f"[INFO] 總共{len(df_input)}筆，全部完成了！")
         
 
