@@ -51,10 +51,16 @@ def set_environment_chrome():
     driver_chrome = webdriver.Chrome(executable_path='../chromedriver.exe',options=chrome_options)
     return driver_chrome
 
+def change_iframe(driver):
+    frame = driver.find_element(By.ID, '//*[@id="mivFrme"]') 
+    driver.switch_to.frame(frame)
+    
+    driver.find_element(By.CLASS_NAME, "recaptcha-checkbox-border").click()
+
         
 def main(input_path):
     """
-    至 https://law.judicial.gov.tw/FJUD/default.aspx 執行檢索
+    至 https://findbiz.nat.gov.tw/fts/query/QueryBar/queryInit.do 執行檢索
     input_path: str, 輸入資料源的相對路徑 ( 含副檔名 )
     """
     # Reference: https://blog.impochun.com/excel-big5-utf8-issue/
@@ -70,27 +76,45 @@ def main(input_path):
     i = 1
     for row in df_input.index:
         
-        URL = 'https://law.judicial.gov.tw/FJUD/default.aspx'
+        URL = 'https://findbiz.nat.gov.tw/fts/query/QueryBar/queryInit.do'
         driver.get(URL)
         time.sleep(2)
         forVerify = df_input.loc[row, 'companies']
         
-        # 輸入要檢查的項目
+        # 點擊「分公司」
         needsCheck = WebDriverWait(driver, 2).until(
-            EC.visibility_of_element_located((By.ID, 'txtKW')))
-    
-        needsCheck.send_keys(forVerify)
+            EC.visibility_of_element_located((By.XPATH, '(//input[@name="qryType"])[2]')))
+        needsCheck.click()
+        
+        # 輸入要檢查的項目
+        driver.find_element(By.XPATH, '//*[@id="qryCond"]').send_keys(forVerify)
     
         time.sleep(2)
         #按下送出查詢
-        driver.find_element(By.XPATH, '//*[@id="btnSimpleQry"]').click()
+        driver.find_element(By.XPATH, '//*[@id="qryBtn"]').click()
         time.sleep(2)
+        
+        # 點擊搜尋出來的第一筆資料
+        driver.find_element(By.XPATH, '//*[@id="vParagraph"]/div[1]/div[1]/a').click()
+        time.sleep(2)
+        
+        # 點選法人董監網路試用版 (要切換frame)
+        frame = driver.find_element(By.ID, '//*[@id="mivFrme"]') 
+        driver.switch_to.frame(frame)
+        
+        driver.find_element(By.ID, '//*[@id="tabAdvanced"]').click()
+        time.sleep(1)
+        
+        # 點選展開全部
+        driver.find_element(By.XPATH, '//button[text()="展開全部"]').click()
+        
+        
         #截圖
         # print(f'[INFO] 現在拍第{i}筆的照片！')
         checkScreenshot(driver, i)
         time.sleep(2)
         #點下「判決書查詢」，回到查詢頁面
-        driver.find_element(By.XPATH, '//a[@href="/FJUD/default.aspx"]').click()
+        driver.find_element(By.XPATH, '//a[@id="tabAdvanced"]').click()
         #清除輸入的字(cookies)
         driver.delete_all_cookies()
 
