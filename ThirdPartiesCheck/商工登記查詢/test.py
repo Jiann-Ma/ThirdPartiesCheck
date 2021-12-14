@@ -23,7 +23,31 @@ def set_environment_chrome():
     chrome_options.add_argument("--start-maximized")
     driver_chrome = webdriver.Chrome(executable_path='../chromedriver.exe',options=chrome_options)
     return driver_chrome
+def build_directory(driver, forVerify):
+    #獲取當前目錄
+    print(os.getcwd())
+    try:
+        File_Path = os.getcwd() + '\\' + forVerify + '\\'
+        if not os.path.exists(File_Path):
+            os.makedirs(File_Path)
+            print('[INFO] 目錄新建成功：%s' % File_Path)
+        else:
+            print('[INFO] 目錄已存在！')
+    except BaseException as msg:
+        print('[INFO] 目錄新建失敗：%s' % msg)
+    except BaseException as msg:
+        print(msg)
+    time.sleep(2)
 
+df_input = pd.read_csv('..//companies.csv', encoding= 'utf-8-sig',
+                             converters={'companies':str})
+print(f'[INFO] 已成功讀取資料，筆數: {len(df_input)}，內容如以下：')
+print(df_input['companies'])
+for row in df_input.index:
+    forVerify = df_input.loc[row, 'companies']
+        
+
+        
 
 driver = set_environment_chrome() 
 URL = 'https://findbiz.nat.gov.tw/fts/query/QueryBar/queryInit.do'
@@ -35,7 +59,8 @@ needsCheck = WebDriverWait(driver, 2).until(EC.visibility_of_element_located((By
 needsCheck.click()
         
         # 輸入要檢查的項目
-driver.find_element(By.XPATH, '//*[@id="qryCond"]').send_keys("玉山商業銀行股份有限公司")
+driver.find_element(By.XPATH, '//*[@id="qryCond"]').send_keys(forVerify)
+# driver.find_element(By.XPATH, '//*[@id="qryCond"]').send_keys("陽信商業銀行股份有限公司")
     
 time.sleep(2)
         #按下送出查詢
@@ -47,28 +72,29 @@ driver.find_element(By.XPATH, '//*[@id="vParagraph"]/div[1]/div[1]/a').click()
 time.sleep(2)
         
 
-# frames = driver.find_elements(By.TAG_NAME, "iframe")
 
-frames = driver.find_element(By.ID, '//*[@id="tabAdvanced"]')
 
-link = "b66e947f49b6811a8bf438040d1582232d3232d7"
-final_website_link = f"https://ipcsa.nat.gov.tw/miv/shareHolder/index?token={link}"
 
-driver.get(link)
+iframe = driver.find_element(By.XPATH, '//*[@id="tabAdvanced"]') 
+iframe.click()
+time.sleep(2)
 
-control_frame = None
-for index, frame in enumerate(frames):
-    print(frames)
-# for index, frame in enumerate(frames):
-#     if frame.get_attribute("title") == "reCAPTCHA":
-#         control_frame = frame
-#     if not (control_frame):
-#         print("[ERROR] 找不到Recaptcha，請重新再試！")
-#         # 點選法人董監網路試用版 (要切換frame)
-#  frame = driver.find_element(By.ID, '//*[@id="mivFrme"]') 
+frame = driver.find_element(By.XPATH, '//*[@id="mivFrme"]') 
+driver.switch_to.frame(frame)
 
-# print(frames)
-# driver.switch_to.frame(frame)
-        
-# driver.find_element(By.ID, '//*[@id="tabAdvanced"]').click()
-# time.sleep(1)
+button = driver.find_element(By.XPATH, '//*[@id="tab_table"]/div[2]/button[2]')
+button.click()
+
+time.sleep(2)
+
+nodes = driver.find_elements(By.XPATH, '//*[@id="chart"]')
+# print("No of frames present in the web page are: ", len(nodes))
+
+time.sleep(2)
+
+# https://ithelp.ithome.com.tw/articles/10202725
+for i in range(len(nodes)):
+    print(nodes[i].text)
+
+with open("test.txt","a+") as f:
+    f.write(nodes[i].text)
