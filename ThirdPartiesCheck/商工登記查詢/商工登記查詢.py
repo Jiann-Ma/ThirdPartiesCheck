@@ -15,18 +15,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 import pandas as pd
 import time, os
 
-
 #Reference: https://www.cnblogs.com/hong-fithing/p/9656221.html
-def checkScreenshot(driver, i):
-    picture_time = time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime(time.time()))
-    directory_time = time.strftime("%Y-%m-%d", time.localtime(time.time()))
-    print(picture_time)
-    print(directory_time)
-    
+def build_directory(driver, forVerify):
     #獲取當前目錄
     print(os.getcwd())
     try:
-        File_Path = os.getcwd() + '\\' + directory_time + '\\'
+        File_Path = os.getcwd() + '\\' + forVerify + '\\'
         if not os.path.exists(File_Path):
             os.makedirs(File_Path)
             print('[INFO] 目錄新建成功：%s' % File_Path)
@@ -34,10 +28,6 @@ def checkScreenshot(driver, i):
             print('[INFO] 目錄已存在！')
     except BaseException as msg:
         print('[INFO] 目錄新建失敗：%s' % msg)
-    
-    try:
-        driver.save_screenshot('.\\' + directory_time + '\\' + picture_time + '.png')
-        print(f'[INFO] 拍完第{i}筆的照片了！')
     except BaseException as msg:
         print(msg)
     time.sleep(2)
@@ -51,11 +41,6 @@ def set_environment_chrome():
     driver_chrome = webdriver.Chrome(executable_path='../chromedriver.exe',options=chrome_options)
     return driver_chrome
 
-def change_iframe(driver):
-    frame = driver.find_element(By.ID, '//*[@id="mivFrme"]') 
-    driver.switch_to.frame(frame)
-    
-    driver.find_element(By.CLASS_NAME, "recaptcha-checkbox-border").click()
 
         
 def main(input_path):
@@ -99,24 +84,25 @@ def main(input_path):
         time.sleep(2)
         
         # 點選法人董監網路試用版 (要切換frame)
-        frame = driver.find_element(By.ID, '//*[@id="mivFrme"]') 
-        driver.switch_to.frame(frame)
-        
-        driver.find_element(By.ID, '//*[@id="tabAdvanced"]').click()
-        time.sleep(1)
+        iframe = driver.find_element(By.XPATH, '//*[@id="tabAdvanced"]') 
+        iframe.click()
+        driver.switch_to.frame(iframe)
+        time.sleep(2)
         
         # 點選展開全部
-        driver.find_element(By.XPATH, '//button[text()="展開全部"]').click()
+        button = driver.find_element(By.XPATH, '//*[@id="tab_table"]/div[2]/button[2]')
+        button.click()
         
+        nodes = driver.find_elements(By.XPATH, '//*[@id="chart"]')
         
-        #截圖
-        # print(f'[INFO] 現在拍第{i}筆的照片！')
-        checkScreenshot(driver, i)
         time.sleep(2)
-        #點下「判決書查詢」，回到查詢頁面
-        driver.find_element(By.XPATH, '//a[@id="tabAdvanced"]').click()
-        #清除輸入的字(cookies)
-        driver.delete_all_cookies()
+        # https://ithelp.ithome.com.tw/articles/10202725
+        for i in range(len(nodes)):
+            print(nodes[i].text)
+
+        with open("test.txt","a+") as f:
+            f.write(nodes[i].text)
+        time.sleep(2)
 
         print(f'[INFO] 現在做完第{i}筆')
         i = i + 1
