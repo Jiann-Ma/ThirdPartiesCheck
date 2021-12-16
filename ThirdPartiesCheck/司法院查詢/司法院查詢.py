@@ -17,7 +17,7 @@ import time, os
 
 
 #Reference: https://www.cnblogs.com/hong-fithing/p/9656221.html
-def checkScreenshot(driver, forVerifyNo, i):
+def checkScreenshot(driver, forVerifyNo, row):
     directory_time = time.strftime("%Y-%m-%d", time.localtime(time.time()))
     
     # 獲取當前目錄
@@ -33,7 +33,7 @@ def checkScreenshot(driver, forVerifyNo, i):
         print('[INFO] 目錄新建失敗：%s' % msg)
     
     driver.save_screenshot(File_Path + '\\' + f'{forVerifyNo}.png')
-    print(f'[INFO] 拍完第{i}筆的照片了！')
+    print(f'[INFO] 拍完第{row}筆的照片了！')
 
     time.sleep(2)
     
@@ -62,7 +62,7 @@ def main(input_path):
     driver = set_environment_chrome()     
 
     # 寫入所需資料
-    i = 1
+    # i = 1
     for row in df_input.index:
         
         URL = 'https://law.judicial.gov.tw/FJUD/default.aspx'
@@ -86,7 +86,7 @@ def main(input_path):
         time.sleep(2)
         
         #截圖
-        checkScreenshot(driver, forVerifyNo, i)
+        checkScreenshot(driver, forVerifyNo, row)
         time.sleep(2)
         
         #點下「判決書查詢」，回到查詢頁面
@@ -95,8 +95,8 @@ def main(input_path):
         #清除輸入的字(cookies)
         driver.delete_all_cookies()
 
-        print(f'[INFO] 現在做完第{i}筆')
-        i = i + 1
+        print(f'[INFO] 現在做完第{row}筆')
+        # i = i + 1
 
     print(f"[INFO] 總共{len(df_input)}筆，全部完成了！")
     driver.close()
