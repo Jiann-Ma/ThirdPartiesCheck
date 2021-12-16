@@ -17,13 +17,10 @@ import time, os
 
 
 #Reference: https://www.cnblogs.com/hong-fithing/p/9656221.html
-def checkScreenshot(driver, i):
-    picture_time = time.strftime("%Y-%m-%d-%H_%M_%S", time.localtime(time.time()))
+def checkScreenshot(driver, forVerifyNo, i):
     directory_time = time.strftime("%Y-%m-%d", time.localtime(time.time()))
-    print(picture_time)
-    print(directory_time)
     
-    #獲取當前目錄
+    # 獲取當前目錄
     print(os.getcwd())
     try:
         File_Path = os.getcwd() + '\\' + directory_time + '\\'
@@ -35,11 +32,9 @@ def checkScreenshot(driver, i):
     except BaseException as msg:
         print('[INFO] 目錄新建失敗：%s' % msg)
     
-    try:
-        driver.save_screenshot('.\\' + directory_time + '\\' + picture_time + '.png')
-        print(f'[INFO] 拍完第{i}筆的照片了！')
-    except BaseException as msg:
-        print(msg)
+    driver.save_screenshot(File_Path + '\\' + f'{forVerifyNo}.png')
+    print(f'[INFO] 拍完第{i}筆的照片了！')
+
     time.sleep(2)
     
 
@@ -75,6 +70,9 @@ def main(input_path):
         time.sleep(2)
         forVerify = df_input.loc[row, 'companies']
         
+        # 加上編號
+        forVerifyNo = f'{row}' + ". " + forVerify
+        
         # 輸入要檢查的項目
         needsCheck = WebDriverWait(driver, 2).until(
             EC.visibility_of_element_located((By.ID, 'txtKW')))
@@ -82,15 +80,18 @@ def main(input_path):
         needsCheck.send_keys(forVerify)
     
         time.sleep(2)
+        
         #按下送出查詢
         driver.find_element(By.XPATH, '//*[@id="btnSimpleQry"]').click()
         time.sleep(2)
+        
         #截圖
-        # print(f'[INFO] 現在拍第{i}筆的照片！')
-        checkScreenshot(driver, i)
+        checkScreenshot(driver, forVerifyNo, i)
         time.sleep(2)
+        
         #點下「判決書查詢」，回到查詢頁面
         driver.find_element(By.XPATH, '//a[@href="/FJUD/default.aspx"]').click()
+        
         #清除輸入的字(cookies)
         driver.delete_all_cookies()
 
