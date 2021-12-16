@@ -10,7 +10,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.common.keys import Keys
 
 import pandas as pd
 import time, os
@@ -61,8 +60,6 @@ def main(input_path):
 
     driver = set_environment_chrome()     
 
-    # 寫入所需資料
-    # i = 1
     for row in df_input.index:
         
         URL = 'https://law.judicial.gov.tw/FJUD/default.aspx'
@@ -96,7 +93,6 @@ def main(input_path):
         driver.delete_all_cookies()
 
         print(f'[INFO] 現在做完第{row}筆')
-        # i = i + 1
 
     print(f"[INFO] 總共{len(df_input)}筆，全部完成了！")
     driver.close()
