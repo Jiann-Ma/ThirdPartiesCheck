@@ -12,7 +12,44 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 import pandas as pd
-import time, os
+import time, os, re
+import win32gui
+import win32con
+import logging
+
+#Reference: https://eip.esunbank.com.tw/sites/PT/DF_RPA/_layouts/15/start.aspx#/Lists/List/Flat.aspx?RootFolder=%2fsites%2fPT%2fDF%5fRPA%2fLists%2fList%2f%5bChromedriver%5d%20%e8%87%aa%e5%8b%95%e6%8a%93%e5%8f%96%e5%b0%8d%e6%87%89%20Chrome%20%e7%89%88%e6%9c%ac%e7%9a%84%e7%a8%8b%e5%bc%8f&FolderCTID=0x012002003EAAE742E9793F48917DC83158D94F98
+def get_chrome_driver():
+    pattern = r'(\d+)\.(\d+)\.(\d+)'
+    cmd = r'reg query "HKEY_CURRENT_USER\Software\Google\Chrome\BLBeacon" /v version'
+    stdout = os.popen(cmd).read()
+    version = re.search(pattern, stdout)
+    if not version:
+        raise ValueError(f'Could not get version for Chrome with this command: {cmd}')
+    current_version = version.group(1)
+    chromedriver_path = f"\\\\eip.esunbank.com.tw@SSL\\DavWWWRoot\\sites\\C010\\DocLib1\\kentsai\\chromedriver\\{current_version}\\chromedriver.exe"
+    if not os.access(chromedriver_path, os.W_OK):
+        logging.info('看不到暫存資料夾, 打開看看')
+        dir_path = os.path.dirname(os.path.dirname(chromedriver_path))
+        os.startfile(dir_path)
+        for i in range(60):
+            hwnd = win32gui.FindWindow(None, 'chromedriver')
+            if hwnd != 0:
+                win32gui.PostMessage(hwnd,win32con.WM_OPEN,0,0)
+                logging.info('關閉資料夾')
+                break
+            logging.info('沒看到資料夾被打開')
+            time.sleep(1)
+    
+    if os.path.exists(chromedriver_path):
+        return chromedriver_path
+    else:
+        logging.info(f'請與RPA小組聯繫, 缺chromedriver v{current_version}, 改讀同目錄chromedriver.exe')
+        chromedriver_path = os.path.abspath('chromedriver.exe')
+        if not os.path.exists(chromedriver_path):
+            logging.info('也不存在exe, 請下載解壓縮, 將chromedriver.exe複製到RPA當前目錄, 再次執行程式')
+            os.popen('start chrome https://chromedriver.chromium.org/downloads')
+        return chromedriver_path
+
 
 
 #Reference: https://www.cnblogs.com/hong-fithing/p/9656221.html
@@ -33,7 +70,6 @@ def checkScreenshot(driver, forVerifyNo, row):
     
     driver.save_screenshot(File_Path + '\\' + f'{forVerifyNo}.png')
     print(f'[INFO] 拍完第{row}筆的照片了！')
-
     time.sleep(2)
     
 
@@ -42,7 +78,7 @@ def set_environment_chrome():
     chrome_options.add_argument("--incognito")
     chrome_options.add_argument("--ignore-certificate-errors")
     chrome_options.add_argument("--start-maximized")
-    driver_chrome = webdriver.Chrome(executable_path='../chromedriver.exe',options=chrome_options)
+    driver_chrome = webdriver.Chrome(get_chrome_driver(),options=chrome_options)
     return driver_chrome
 
         
